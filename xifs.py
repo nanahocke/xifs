@@ -18,7 +18,7 @@ def CRF(filename):
     CRF_SW=tsrc-tsr
     CRF=CRF_SW+CRF_LW
     CRF_lat_mean=CRF.mean('lat')
-    CRF_global_mean=CRF_lat_mean.mean('lon')/86400 #for unit in W/m²
+    CRF_global_mean=CRF_lat_mean.mean('lon')/10800 #for unit in W/m²
     
     ###plotting
     plt.figure(figsize=(15,5))
