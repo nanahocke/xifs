@@ -13,12 +13,14 @@ def CRF(filename):
     ttr=ds.ttr
     tsr=ds.tsr
     
+    weights=np.cos(np.deg2rad(ds.lat))
+    
     ###Calculation of CRF, is this correct?
     CRF_LW=ttrc-ttr
     CRF_SW=tsrc-tsr
     CRF=CRF_SW+CRF_LW
-    CRF_lat_mean=CRF.mean('lat')
-    CRF_global_mean=CRF_lat_mean.mean('lon')/10800 #for unit in W/m²
+    CRF_weighted=CRF.weighted(weights)
+    CRF_global_mean=CRF_weighted.mean(('lat', 'lon'))/10800
     
     ###plotting
     plt.figure(figsize=(15,5))
@@ -26,3 +28,21 @@ def CRF(filename):
     plt.ylabel('CRF [$W/m^2$]')
     plt.xlabel('Time')
     plt.savefig(filename[:-3]+'.png')
+    
+    
+def surfacepressure(filename):
+    """input: netcdf data, plots global average of surface pressure"""
+    ds=xr.open_dataset(filename)
+    
+    sp=ds.sp
+    weights=np.cos(np.deg2rad(ds.lat))
+    sp_weighted=sp.weighted(weights)
+    
+    sp_global_mean=sp_weighted.mean(('lat', 'lon'))/100
+    
+    ###plotting
+    plt.figure(figsize=(15,5))
+    sp_global_mean.plot()
+    plt.ylabel('surface pressure [hPa]')
+    plt.xlabel('Time')
+    plt.savefig(filename[:-3]+'_sp.png')
