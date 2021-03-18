@@ -162,3 +162,163 @@ def surface_sensible_heat_flux(filename):
     plt.ylabel('surface sensible heat flux [W/m²]')
     plt.xlabel('Time')
     plt.savefig(filename[:-3]+'_sshf.png')
+    
+def surface_latent_heat_flux(filename):
+    """input: netcdf data, plots global average of surface latent heat flux [W/m²]"""
+    ds=xr.open_dataset(filename)
+    
+    slhf=ds.slhf
+    weights=np.cos(np.deg2rad(ds.lat))
+    slhf_weighted=slhf.weighted(weights)
+    slhf_global_mean=slhf_weighted.mean(('lat', 'lon'))/10800
+    
+    ###plotting
+    plt.figure(figsize=(15,5))
+    slhf_global_mean.plot()
+    plt.ylabel('surface latent heat flux [W/m²]')
+    plt.xlabel('Time')
+    plt.savefig(filename[:-3]+'_slhf.png')
+
+def mean_sea_level_pressure(filename):
+    """input: netcdf data, plots global average of mean sea level pressure [hPa]"""
+    ds=xr.open_dataset(filename)
+    
+    msl=ds.msl
+    weights=np.cos(np.deg2rad(ds.lat))
+    msl_weighted=msl.weighted(weights)
+    msl_global_mean=msl_weighted.mean(('lat', 'lon'))/100
+    
+    ###plotting
+    plt.figure(figsize=(15,5))
+    msl_global_mean.plot()
+    plt.ylabel('mean sea level pressure [hPa]')
+    plt.xlabel('Time')
+    plt.savefig(filename[:-3]+'_msl.png')
+   
+def surface_solar_radiation_downwards(filename):
+    """input: netcdf data, plots global average of surface solar radiation downwards [W/m²]"""
+    ds=xr.open_dataset(filename)
+    
+    ssrd=ds.ssrd
+    weights=np.cos(np.deg2rad(ds.lat))
+    ssrd_weighted=ssrd.weighted(weights)
+    ssrd_global_mean=ssrd_weighted.mean(('lat', 'lon'))/10800
+    
+    ###plotting
+    plt.figure(figsize=(15,5))
+    ssrd_global_mean.plot()
+    plt.ylabel('surface solar radiation downwards [W/m²]')
+    plt.xlabel('Time')
+    plt.savefig(filename[:-3]+'_ssrd.png')
+    
+def surface_thermal_radiation_downwards(filename):
+    """input: netcdf data, plots global average of surface thermal radiation downwards [W/m²]"""
+    ds=xr.open_dataset(filename)
+    
+    strd=ds.strd
+    weights=np.cos(np.deg2rad(ds.lat))
+    strd_weighted=strd.weighted(weights)
+    strd_global_mean=strd_weighted.mean(('lat', 'lon'))/10800
+    
+    ###plotting
+    plt.figure(figsize=(15,5))
+    strd_global_mean.plot()
+    plt.ylabel('surface thermal radiation downwards [W/m²]')
+    plt.xlabel('Time')
+    plt.savefig(filename[:-3]+'_strd.png')
+    
+def surface_net_solar_radiation(filename):
+    """input: netcdf data, plots global average of surface net solar radiation [W/m²]"""
+    ds=xr.open_dataset(filename)
+    
+    ssr=ds.ssr
+    weights=np.cos(np.deg2rad(ds.lat))
+    ssr_weighted=ssr.weighted(weights)
+    ssr_global_mean=ssr_weighted.mean(('lat', 'lon'))/10800
+    
+    ###plotting
+    plt.figure(figsize=(15,5))
+    ssr_global_mean.plot()
+    plt.ylabel('surface net solar radiation [W/m²]')
+    plt.xlabel('Time')
+    plt.savefig(filename[:-3]+'_ssr.png')
+    
+def surface_net_thermal_radiation(filename):
+    """input: netcdf data, plots global average of surface net thermal radiation [W/m²]"""
+    ds=xr.open_dataset(filename)
+    
+    sntr=ds.str
+    weights=np.cos(np.deg2rad(ds.lat))
+    sntr_weighted=sntr.weighted(weights)
+    sntr_global_mean=sntr_weighted.mean(('lat', 'lon'))/10800
+    
+    ###plotting
+    plt.figure(figsize=(15,5))
+    sntr_global_mean.plot()
+    plt.ylabel('surface net thermal radiation [W/m²]')
+    plt.xlabel('Time')
+    plt.savefig(filename[:-3]+'_str.png')
+    
+def top_net_solar_radiation(filename):
+    """input: netcdf data, plots global average of top net solar radiation [W/m²]"""
+    ds=xr.open_dataset(filename)
+    
+    tsr=ds.tsr
+    weights=np.cos(np.deg2rad(ds.lat))
+    tsr_weighted=tsr.weighted(weights)
+    tsr_global_mean=tsr_weighted.mean(('lat', 'lon'))/10800
+    
+    ###plotting
+    plt.figure(figsize=(15,5))
+    tsr_global_mean.plot()
+    plt.ylabel('top net solar radiation [W/m²]')
+    plt.xlabel('Time')
+    plt.savefig(filename[:-3]+'_tsr.png')
+    
+def top_net_thermal_radiation(filename):
+    """input: netcdf data, plots global average of top net thermal radiation [W/m²]"""
+    ds=xr.open_dataset(filename)
+    
+    ttr=ds.ttr
+    weights=np.cos(np.deg2rad(ds.lat))
+    ttr_weighted=ttr.weighted(weights)
+    ttr_global_mean=ttr_weighted.mean(('lat', 'lon'))/10800
+    
+    ###plotting
+    plt.figure(figsize=(15,5))
+    ttr_global_mean.plot()
+    plt.ylabel('top net thermal radiation [W/m²]')
+    plt.xlabel('Time')
+    plt.savefig(filename[:-3]+'_ttr.png')
+    
+def evaporation(filename):
+    """input: netcdf data, plots global average of evaporation [mm/day] of water equivalent"""
+    ds=xr.open_dataset(filename)
+    
+    e=ds.e
+    weights=np.cos(np.deg2rad(ds.lat))
+    e_weighted=e.weighted(weights)
+    e_global_mean=e_weighted.mean(('lat', 'lon'))*8*1000
+    
+    ###plotting
+    plt.figure(figsize=(15,5))
+    e_global_mean.plot()
+    plt.ylabel('evaporation [mm/day] of water equivalent')
+    plt.xlabel('Time')
+    plt.savefig(filename[:-3]+'_e.png')
+    
+def snow_evaporation(filename):
+    """input: netcdf data, plots global average of snow evaporation [mm/day] of water equivalent"""
+    ds=xr.open_dataset(filename)
+    
+    es=ds.es
+    weights=np.cos(np.deg2rad(ds.lat))
+    es_weighted=es.weighted(weights)
+    es_global_mean=es_weighted.mean(('lat', 'lon'))*8*1000
+    
+    ###plotting
+    plt.figure(figsize=(15,5))
+    es_global_mean.plot()
+    plt.ylabel('snow evaporation [mm/day] of water equivalent')
+    plt.xlabel('Time')
+    plt.savefig(filename[:-3]+'_es.png')
