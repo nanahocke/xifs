@@ -143,7 +143,7 @@ def snowfall(filename):
     ###plotting
     plt.figure(figsize=(15,5))
     sf_global_mean.plot()
-    plt.ylabel('snowfall [mm/day] for water equivalent')
+    plt.ylabel('snowfall [mm/day] of water equivalent')
     plt.xlabel('Time')
     plt.savefig(filename[:-3]+'_sf.png')
     
