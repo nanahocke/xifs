@@ -338,3 +338,19 @@ def temperature_2m(filename):
     plt.ylabel('2m temperature [°C]')
     plt.xlabel('Time')
     plt.savefig(filename[:-3]+'_2t.png')
+    
+def dewpoint_temperature_2m(filename):
+    """input: netcdf data, plots global average of top net thermal radiation [W/m²]"""
+    ds=xr.open_dataset(filename)
+    
+    d2m=ds['2d']
+    weights=np.cos(np.deg2rad(ds.lat))
+    d2m_weighted=d2m.weighted(weights)
+    d2m_global_mean=d2m_weighted.mean(('lat', 'lon'))-273.15
+    
+    ###plotting
+    plt.figure(figsize=(15,5))
+    d2m_global_mean.plot()
+    plt.ylabel('2m dewpoint temperature [°C]')
+    plt.xlabel('Time')
+    plt.savefig(filename[:-3]+'_2d.png')
