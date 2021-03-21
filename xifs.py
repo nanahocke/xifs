@@ -322,3 +322,19 @@ def snow_evaporation(filename):
     plt.ylabel('snow evaporation [mm/day] of water equivalent')
     plt.xlabel('Time')
     plt.savefig(filename[:-3]+'_es.png')
+
+def temperature_2m(filename):
+    """input: netcdf data, plots global average of top net thermal radiation [W/m²]"""
+    ds=xr.open_dataset(filename)
+    
+    t2m=ds['2t']
+    weights=np.cos(np.deg2rad(ds.lat))
+    t2m_weighted=t2m.weighted(weights)
+    t2m_global_mean=t2m_weighted.mean(('lat', 'lon'))-273.15
+    
+    ###plotting
+    plt.figure(figsize=(15,5))
+    t2m_global_mean.plot()
+    plt.ylabel('2m temperature [°C]')
+    plt.xlabel('Time')
+    plt.savefig(filename[:-3]+'_2t.png')
