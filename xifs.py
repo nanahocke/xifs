@@ -1,6 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import xarray as xr
+import hvplot.xarray
+import pandas as pd
+import warnings
+warnings.filterwarnings("ignore")
+import cartopy.crs as ccrs
 
 def CRF(filename):
     """loads netCDF file, calculates CRF on lat/lon grid, plots global mean in a time series"""
