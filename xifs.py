@@ -70,4 +70,4 @@ def output_variable_seasonal_map(filename, var, seas):
     plt.title(var+' ['+ds[var].attrs['units']+']\nseason='+seas)
     p.axes.gridlines()
     p.axes.coastlines()
-    plt.savefig(filename[:-3]+var+'_global.png')
+    plt.savefig(filename[:-3]+'_'var+'_'+seas+'_global.png')
