@@ -47,4 +47,24 @@ def output_variable(filename, var):
     plt.xlabel('Time')
     plt.savefig(filename[:-3]+'_'+var+'.png')    
     
+def output_variable_seasonal_map(filename, var, seas):
+    """input: netcdf data, variable, season; plots seasonal average of variable as Mollweide projection"""
+    ds=xr.open_dataset(filename)
+    
+    month_length=ds[var].time_counter.dt.days_in_month
+    weights = month_length.groupby('time_counter.season') / month_length.groupby('time_counter.season').sum()
+    np.testing.assert_allclose(weights.groupby('time_counter.season').sum().values, np.ones(4))
+    ds_weighted = (ds[var] * weights).groupby('time_counter.season').sum(dim='time_counter')
+    
+    var_season=ds_weighted.sel(season=seas)
+    
+    ###plotting
+    plt.figure(figsize=(10,5))
+    p = var_season.plot(cmap='Spectral',
+        subplot_kws=dict(projection=ccrs.Mollweide(0), facecolor="gray"),
+        transform=ccrs.PlateCarree(),
+    )
+    plt.title(var+' ['+ds[var].attrs['units']+']\nseason='+seas)
+    p.axes.gridlines()
+    p.axes.coastlines()    
 
