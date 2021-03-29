@@ -67,4 +67,4 @@ def analysis(analysis_list, sfc_file):
             for j in variable_list:
                 if i==j:
                     result[i]=output_variable(sfc_file, i)
-		    return result
+    return result
