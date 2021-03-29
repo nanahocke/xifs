@@ -1,37 +1,30 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import xarray as xr
-import hvplot.xarray
-import pandas as pd
 import warnings
 warnings.filterwarnings("ignore")
-import cartopy.crs as ccrs
 
 def CRF(filename):
     """calculates CRF on lat/lon grid, plots global mean in a time series"""
-    
-    ds=xr.open_dataset(filename)
+
+    ds=xr.open_dataset('ECE3_1m_19790101-20191231_regular_sfc.nc')
     weights=np.cos(np.deg2rad(ds.lat))
-    
+
     ###variables
     ttrc=ds.ttrc
     tsrc=ds.tsrc
     ttr=ds.ttr
     tsr=ds.tsr
-    
-    ###Calculation of CRF still wrong
+
+	###Calculation of CRF
     CRF_LW=ttrc-ttr
     CRF_SW=tsrc-tsr
     CRF=CRF_SW+CRF_LW
     CRF_weighted=CRF.weighted(weights)
-    CRF_global_mean=CRF_weighted.mean(('lat', 'lon'))/10800
+    CRF_global_mean=CRF_weighted.mean(('lat', 'lon'))
+    CRF_global_mean.attrs={'long_name': 'CRF',
+                          'units': 'J/m²'}
     
-    ###plotting
-    plt.figure(figsize=(15,5))
-    CRF_global_mean.plot()
-    plt.ylabel('CRF [$W/m^2$]')
-    plt.xlabel('Time')
-    plt.savefig(filename[:-3]+'_CRF.png')
+    return CRF_global_mean
 
 def output_variable(filename, var):
     """input: netcdf data, variable; plots global mean in a time series"""
@@ -42,32 +35,37 @@ def output_variable(filename, var):
     var_weighted=variable.weighted(weights)
     
     var_global_mean=var_weighted.mean(('lat', 'lon'))
+    var_global_mean.attrs=variable.attrs
     
-    ###plotting
-    plt.figure(figsize=(15,5))
-    var_global_mean.plot()
-    plt.ylabel(var+' ['+variable.attrs['units']+']')
-    plt.xlabel('Time')
-    plt.savefig(filename[:-3]+'_'+var+'.png')
+    return var_global_mean
     
-def output_variable_seasonal_map(filename, var, seas):
+def output_variable_seasonal_map(filename, var):
     """input: netcdf data, variable, season; plots seasonal average of variable as Mollweide projection"""
     ds=xr.open_dataset(filename)
-    
-    month_length=ds[var].time_counter.dt.days_in_month
+    variable=ds[var]
+    month_length=variable.time_counter.dt.days_in_month
     weights = month_length.groupby('time_counter.season') / month_length.groupby('time_counter.season').sum()
     np.testing.assert_allclose(weights.groupby('time_counter.season').sum().values, np.ones(4))
-    ds_weighted = (ds[var] * weights).groupby('time_counter.season').sum(dim='time_counter')
+    ds_weighted = (variable * weights).groupby('time_counter.season').sum(dim='time_counter')
     
-    var_season=ds_weighted.sel(season=seas)
+    var_season=ds_weighted
+    var_season.attrs=variable.attrs
+    return var_season
     
-    ###plotting
-    plt.figure(figsize=(10,5))
-    p = var_season.plot(cmap='Spectral_r',
-        subplot_kws=dict(projection=ccrs.Mollweide(0), facecolor="gray"),
-        transform=ccrs.PlateCarree(),
-    )
-    plt.title(var+' ['+ds[var].attrs['units']+']\nseason='+seas)
-    p.axes.gridlines()
-    p.axes.coastlines()
-    plt.savefig(filename[:-3]+'_'var+'_'+seas+'_global.png')
+def analysis(analysis_list, sfc_file):
+ 
+    result = {} 
+    if "glomean_crf" in analysis_list:
+        result['glomean_crf'] = CRF(sfc_file)
+    if "seasmean_t2m" in analysis_list:
+        result['seasmean_t2m'] = output_variable_seasonal_map(sfc_file, '2t')
+    if "seasmean_sp" in analysis_list:
+        result['seasmean_sp'] = output_variable_seasonal_map(sfc_file, 'sp')
+    else:
+        variable_list=['es','tclw','tciw','sp','tcwv','lsp','cp','sf','sshf','slhf','msl','2t','2d','ssrd','strd','ssr','str','tsr','ttr','e','tsrc','ttrc','ssrc','strc','tisr','tp','skt']
+        for i in analysis_list:
+            for j in variable_list:
+                if i==j:
+                    result[i]=output_variable(sfc_file, i)
+    
+                    return result
