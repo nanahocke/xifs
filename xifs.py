@@ -55,17 +55,12 @@ def output_variable_seasonal_map(filename, var):
 def analysis(analysis_list, sfc_file):
 
     result = {} # empty dictionary
-    if "glomean_crf" in analysis_list:
-        result['glomean_crf'] = CRF(sfc_file)
-    if "seasmean_t2m" in analysis_list:
-        result['seasmean_t2m'] = output_variable_seasonal_map(sfc_file, '2t')
-    if "seasmean_sp" in analysis_list:
-        result['seasmean_sp'] = output_variable_seasonal_map(sfc_file, 'sp')
-        
-    variable_list=['es','tclw','tciw','sp','tcwv','lsp','cp','sf','sshf','slhf','msl','2t','2d','ssrd','strd','ssr','str','tsr','ttr','e','tsrc','ttrc','ssrc','strc','tisr','tp','skt']
-    for i in analysis_list:
-        for j in variable_list:
-            if i==j:
-                result[i]=output_variable(sfc_file, i)
+    for item in analysis_list:
+        if item == 'glomean_crf':
+            result['glomean_crf'] = CRF(sfc_file)
+        elif item[:8]=='seasmean':
+            result[item] = output_variable_seasonal_map(sfc_file, item[9:])
+        else:
+            result[item]=output_variable(sfc_file, item)
     
     return result
