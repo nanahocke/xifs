@@ -23,7 +23,7 @@ def CRF(filename):
     CRF_global_mean=CRF_weighted.mean(('lat', 'lon'))
     CRF_global_mean.attrs={'long_name': 'CRF',
                           'units': 'J/m²'}
-    
+    CRF_global_mean.name='glomean_crf'
     return CRF_global_mean
 
 def output_variable(filename, var):
@@ -36,6 +36,7 @@ def output_variable(filename, var):
     
     var_global_mean=var_weighted.mean(('lat', 'lon'))
     var_global_mean.attrs=variable.attrs
+    var_global_mean.name=var
     
     return var_global_mean
     
@@ -50,6 +51,7 @@ def output_variable_seasonal_map(filename, var):
     
     var_season=ds_weighted
     var_season.attrs=variable.attrs
+    var_season.name='seasmean'+var
     return var_season
     
 def analysis(analysis_list, sfc_file):
@@ -64,3 +66,9 @@ def analysis(analysis_list, sfc_file):
             result[item]=output_variable(sfc_file, item)
     
     return result
+
+def to_netcdf(d, path_name):
+    """d is a dictionary, path_name is a string, writes d on disk as netCDF"""
+    data=d.values()
+    ds=xr.merge(data)
+    ds.to_netcdf(path=path_name)
