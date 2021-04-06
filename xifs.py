@@ -6,7 +6,7 @@ warnings.filterwarnings("ignore")
 def CRF(filename):
     """calculates CRF on lat/lon grid, plots global mean in a time series"""
 
-    ds=xr.open_dataset('ECE3_1m_19790101-20191231_regular_sfc.nc')
+    ds=xr.open_dataset(filename)
     weights=np.cos(np.deg2rad(ds.lat))
 
     ###variables
