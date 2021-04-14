@@ -36,7 +36,7 @@ def output_variable(filename, var):
     
     var_global_mean=var_weighted.mean(('lat', 'lon'))
     var_global_mean.attrs=variable.attrs
-    var_global_mean.name=var
+    var_global_mean.name='glomean_'+var
     
     return var_global_mean
     
@@ -51,7 +51,7 @@ def output_variable_seasonal_map(filename, var):
     
     var_season=ds_weighted
     var_season.attrs=variable.attrs
-    var_season.name='seasmean'+var
+    var_season.name='seasmean_'+var
     return var_season
     
 def analysis(analysis_list, sfc_file):
