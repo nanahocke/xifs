@@ -84,6 +84,10 @@ def analysis(analysis_list, sfc_file):
             result[item] = output_variable_seasonal_map(sfc_file, item[9:])
         elif item[:7]=='glomean':
             result[item] = output_variable_glomean(sfc_file, item[8:])    
+        elif item=='polar_vortex':
+            result[item]=polar_vortex(sfc_file)
+        elif item=='QBO':
+            result[item]=QBO(sfc_file)
     return result
 
 def to_netcdf(d, path_name):
