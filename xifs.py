@@ -93,5 +93,5 @@ def analysis(analysis_list, sfc_file):
 def to_netcdf(d, path_name):
     """d is a dictionary, path_name is a string, writes d on disk as netCDF"""
     data=d.values()
-    ds=xr.merge(data)
+    ds=xr.merge(data, compat='override')
     ds.to_netcdf(path=path_name)
