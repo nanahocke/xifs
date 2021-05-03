@@ -1,9 +1,10 @@
 import numpy as np
 import xarray as xr
 import warnings
+import numpy as np
 warnings.filterwarnings("ignore")
 
-def CRF(filename):
+def CRF_glomean(filename):
     """calculates CRF on lat/lon grid, plots global mean in a time series"""
 
     ds=xr.open_dataset(filename)
@@ -26,7 +27,7 @@ def CRF(filename):
     CRF_global_mean.name='glomean_crf'
     return CRF_global_mean
 
-def output_variable(filename, var):
+def output_variable_glomean(filename, var):
     """input: netcdf data, variable; plots global mean in a time series"""
     ds=xr.open_dataset(filename)
     
@@ -53,18 +54,36 @@ def output_variable_seasonal_map(filename, var):
     var_season.attrs=variable.attrs
     var_season.name='seasmean_'+var
     return var_season
+
+def polar_vortex(filename):
+    ds=xr.open_dataset(filename)
+    u=ds['u']
+    lat=u.lat
+    u_mean=u.sel(lat=60, pressure_levels=1000,method='nearest').mean('lon')
+    u_mean.attrs=u.attrs
+    u_mean.name='u_polar_vortex'
+    return u_mean
+
+def QBO(filename):
+    ds=xr.open_dataset(filename)
+    u=ds['u']
+    lat=u.lat
+    lon=u.lon
+    u_mean=u.sel(lat=1.29,lon=103.85,method='nearest').groupby('time_counter.month').mean('time_counter')
+    u_mean.attrs=u.attrs
+    u_mean.name='u_Singapore'
+    return u_mean
     
 def analysis(analysis_list, sfc_file):
 
     result = {} # empty dictionary
     for item in analysis_list:
         if item == 'glomean_crf':
-            result['glomean_crf'] = CRF(sfc_file)
+            result['glomean_crf'] = CRF_glomean(sfc_file)
         elif item[:8]=='seasmean':
             result[item] = output_variable_seasonal_map(sfc_file, item[9:])
-        else:
-            result[item]=output_variable(sfc_file, item)
-    
+        elif item[:7]=='glomean':
+            result[item] = output_variable_glomean(sfc_file, item[8:])    
     return result
 
 def to_netcdf(d, path_name):
