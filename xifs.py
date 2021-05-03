@@ -69,7 +69,8 @@ def QBO(filename):
     u=ds['u']
     lat=u.lat
     lon=u.lon
-    u_mean=u.sel(lat=1.29,lon=103.85,method='nearest').groupby('time_counter.month').mean('time_counter')
+    u_mean=u.sel(lat=1.29,lon=103.85,method='nearest')
+    u_mean.resample(time_counter="M").mean()
     u_mean.attrs=u.attrs
     u_mean.name='u_Singapore'
     return u_mean
