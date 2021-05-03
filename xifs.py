@@ -60,6 +60,7 @@ def polar_vortex(filename):
     u=ds['u']
     lat=u.lat
     u_mean=u.sel(lat=60, pressure_levels=1000,method='nearest').mean('lon')
+    u_mean.resample(time_counter="D").mean()
     u_mean.attrs=u.attrs
     u_mean.name='u_polar_vortex'
     return u_mean
