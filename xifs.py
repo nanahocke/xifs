@@ -2,12 +2,13 @@ import numpy as np
 import xarray as xr
 import warnings
 import numpy as np
+import math
 warnings.filterwarnings("ignore")
 
 def CRF_glomean(filename):
     """calculates CRF on lat/lon grid, plots global mean in a time series"""
 
-    ds=xr.open_dataset(filename)
+    ds=xr.open_mfdataset(filename, combine='by_coords')
     weights=np.cos(np.deg2rad(ds.lat))
 
     ###variables
@@ -29,7 +30,7 @@ def CRF_glomean(filename):
 
 def output_variable_glomean(filename, var):
     """input: netcdf data, variable; plots global mean in a time series"""
-    ds=xr.open_dataset(filename)
+    ds=xr.open_mfdataset(filename, combine='by_coords')
     
     variable=ds[var]
     weights=np.cos(np.deg2rad(ds.lat))
@@ -43,7 +44,7 @@ def output_variable_glomean(filename, var):
     
 def output_variable_seasonal_map(filename, var):
     """input: netcdf data, variable, season; plots seasonal average of variable as Mollweide projection"""
-    ds=xr.open_dataset(filename)
+    ds=xr.open_mfdataset(filename, combine='by_coords')
     variable=ds[var]
     month_length=variable.time_counter.dt.days_in_month
     weights = month_length.groupby('time_counter.season') / month_length.groupby('time_counter.season').sum()
@@ -56,7 +57,7 @@ def output_variable_seasonal_map(filename, var):
     return var_season
 
 def polar_vortex(filename):
-    ds=xr.open_dataset(filename)
+    ds=xr.open_mfdataset(filename, combine='by_coords')
     u=ds['u']
     lat=u.lat
     u_mean=u.sel(lat=60, pressure_levels=1000,method='nearest').mean('lon')
@@ -66,7 +67,7 @@ def polar_vortex(filename):
     return u_mean
 
 def QBO(filename):
-    ds=xr.open_dataset(filename)
+    ds=xr.open_mfdataset(filename, combine='by_coords')
     u=ds['u']
     lat=u.lat
     lon=u.lon
@@ -75,7 +76,24 @@ def QBO(filename):
     u_mean.attrs=u.attrs
     u_mean.name='u_Singapore'
     return u_mean
-    
+
+def SSW_analysis(sfc_file):
+    """saves SSW central dates in a text file"""
+    pv=polar_vortex(sfc_file)
+    seas = pv.sel(time_counter=pv.time_counter.dt.month.isin([1, 2, 3, 11, 12]))
+    SSW=seas.where(seas<=0)
+    SSW_np=np.array(SSW)#
+    date=np.array(SSW.time_counter)
+    SSW_date=[]
+    for i in range(len(SSW_np)):
+        if math.isnan(SSW_np[i])==False:
+            if math.isnan(SSW_np[i-1]):
+                SSW_date.append(str(date[i]))
+    with open('SSW.txt', 'w') as f:
+        for item in SSW_date:
+            f.write("%s\n" % item)
+            
+            
 def analysis(analysis_list, sfc_file):
 
     result = {} # empty dictionary
@@ -90,6 +108,8 @@ def analysis(analysis_list, sfc_file):
             result[item]=polar_vortex(sfc_file)
         elif item=='QBO':
             result[item]=QBO(sfc_file)
+        elif item=='SSW':
+            SSW_analysis(sfc_file)
     return result
 
 def to_netcdf(d, path_name):
