@@ -77,6 +77,28 @@ def QBO(filename):
     u_mean.name='u_Singapore'
     return u_mean
 
+def PJ_position_max_u(sfc_file):
+    ds=xr.open_mfdataset(sfc_file, combine='by_coords')
+    u=ds['u']
+    lat=ds['lat']
+    u_nh=u.where(lat>0)
+    u_nh_300=u_nh.sel(pressure_levels=30000, method='nearest')
+    pj=u_nh_300.where(lat>40, drop=True)
+    pj=pj.where(lat<60, drop=True)
+    jet_pj=pj.idxmax(dim='lat')
+    return jet_pj
+
+def STJ_position_max_u(sfc_file):
+    ds=xr.open_mfdataset(sfc_file, combine='by_coords')
+    u=ds['u']
+    lat=ds['lat']
+    u_nh=u.where(lat>0)
+    u_nh_300=u_nh.sel(pressure_levels=20000, method='nearest')
+    sj=u_nh_300.where(lat<30, drop=True)
+    sj=sj.where(lat>20, drop=True)
+    jet_sj=sj.idxmax(dim='lat')
+    return jet_sj
+
 def SSW_analysis(sfc_file):
     """saves SSW central dates in a text file"""
     pv=polar_vortex(sfc_file)
@@ -110,6 +132,10 @@ def analysis(analysis_list, sfc_file):
             result[item]=QBO(sfc_file)
         elif item=='SSW':
             SSW_analysis(sfc_file)
+        elif item =='PJ':
+            result[item]=PJ_position_max_u(sfc_file)
+        elif item =='STJ':
+            result[item]=STJ_position_max_u(sfc_file)
     return result
 
 def to_netcdf(d, path_name):
