@@ -77,27 +77,27 @@ def QBO(filename):
     u_mean.name='u_Singapore'
     return u_mean
 
-def PJ_position_max_u(sfc_file):
+def Jet_position_and_strength(sfc_file):
     ds=xr.open_mfdataset(sfc_file, combine='by_coords')
-    u=ds['u']
+    u_wind=ds['u']
+    v=ds['v']
+    u=np.sqrt(u_wind**2+v**2)
+    u.attrs['units']=u_wind.attrs['units']
     lat=ds['lat']
-    u_nh=u.where(lat>0)
-    u_nh_300=u_nh.sel(pressure_levels=30000, method='nearest')
-    pj=u_nh_300.where(lat>40, drop=True)
-    pj=pj.where(lat<60, drop=True)
-    jet_pj=pj.idxmax(dim='lat')
-    return jet_pj
+    u_300=u.sel(pressure_levels=30000, method='nearest')
+    #selecting ranges for NH and SH
+    nh=u_300.where(lat>40, drop=True)
+    nh=nh.where(lat<90, drop=True)
+    sh=u_300.where(lat>-40, drop=True)
+    sh=sh.where(lat>-90, drop=True)
 
-def STJ_position_max_u(sfc_file):
-    ds=xr.open_mfdataset(sfc_file, combine='by_coords')
-    u=ds['u']
-    lat=ds['lat']
-    u_nh=u.where(lat>0)
-    u_nh_300=u_nh.sel(pressure_levels=20000, method='nearest')
-    sj=u_nh_300.where(lat<30, drop=True)
-    sj=sj.where(lat>20, drop=True)
-    jet_sj=sj.idxmax(dim='lat')
-    return jet_sj
+    #calculating max over lat. return position
+    jet_nh=nh.idxmax(dim='lat')
+    jet_nh_val=nh.max(dim='lat')
+    jet_sh=sh.idxmax(dim='lat')
+    jet_sh_val=sh.max(dim='lat')
+    return jet_nh, jet_nh_val, jet_sh, jet_sh_val
+
 
 def SSW_analysis(sfc_file):
     """saves SSW central dates in a text file"""
@@ -132,10 +132,8 @@ def analysis(analysis_list, sfc_file):
             result[item]=QBO(sfc_file)
         elif item=='SSW':
             SSW_analysis(sfc_file)
-        elif item =='PJ':
-            result[item]=PJ_position_max_u(sfc_file)
-        elif item =='STJ':
-            result[item]=STJ_position_max_u(sfc_file)
+        elif item =='jet':
+            result[item+'_nh_pos'],result[item+'_nh_value'],result[item+'_sh_pos'],result[item+'_sh_value']=Jet_position_and_strength(sfc_file)
     return result
 
 def to_netcdf(d, path_name):
