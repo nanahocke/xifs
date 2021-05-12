@@ -87,20 +87,31 @@ def Jet_position_and_strength(sfc_file):
     u_300=u.sel(pressure_levels=30000, method='nearest')
     #selecting ranges for NH and SH
     nh=u_300.where(lat>40, drop=True)
-    nh=nh.where(lat<90, drop=True)
-    sh=u_300.where(lat>-40, drop=True)
-    sh=sh.where(lat>-90, drop=True)
+    sh=u_300.where(lat<-40, drop=True)
 
     #calculating max over lat. return position
-    jet_nh=nh.idxmax(dim='lat')
-    jet_nh_val=nh.max(dim='lat')
-    jet_sh=sh.idxmax(dim='lat')
-    jet_sh_val=sh.max(dim='lat')
+    jet_nh=nh.idxmax(dim='lat', keep_attrs=True)
+    jet_nh.name='jet_nh'
+    jet_nh.attrs['units']='°'
+    jet_nh_val=nh.max(dim='lat', keep_attrs=True)
+    jet_nh_val.attrs=u_wind.attrs
+    jet_nh_val.name='jet_nh_val'
+    jet_sh=sh.idxmax(dim='lat', keep_attrs=True)
+    jet_sh.name='jet_sh'
+    jet_sh.attrs['units']='°'
+    jet_sh_val=sh.max(dim='lat', keep_attrs=True)
+    jet_sh_val.attrs=u_wind.attrs
+    jet_sh_val.name='jet_sh_val'
+    jet_sh_val.attrs['standard_name']='total wind'
+    jet_nh_val.attrs['standard_name']='total wind'
+    jet_sh_val.attrs['long_name']='total wind'
+    jet_nh_val.attrs['long_name']='total wind'
     return jet_nh, jet_nh_val, jet_sh, jet_sh_val
 
 
 def SSW_analysis(sfc_file):
     """saves SSW central dates in a text file"""
+    ds=xr.open_mfdataset(sfc_file, combine='by_coords')
     pv=polar_vortex(sfc_file)
     seas = pv.sel(time_counter=pv.time_counter.dt.month.isin([1, 2, 3, 11, 12]))
     SSW=seas.where(seas<=0)
@@ -110,11 +121,13 @@ def SSW_analysis(sfc_file):
     for i in range(len(SSW_np)):
         if math.isnan(SSW_np[i])==False:
             if math.isnan(SSW_np[i-1]):
-                SSW_date.append(str(date[i]))
-    with open('SSW.txt', 'w') as f:
-        for item in SSW_date:
-            f.write("%s\n" % item)
-            
+                SSW_date.append(date[i])
+    SSW_date=xr.DataArray(SSW_date)
+    SSW_date.name='SSW_central_date'
+    SSW_date.attrs=ds['time_counter'].attrs
+    SSW_date=SSW_date.assign_coords({'dim_0':SSW_date})
+    SSW_date=SSW_date.rename({'dim_0':'time_counter'})
+    return SSW_date       
             
 def analysis(analysis_list, sfc_file):
 
@@ -131,7 +144,7 @@ def analysis(analysis_list, sfc_file):
         elif item=='QBO':
             result[item]=QBO(sfc_file)
         elif item=='SSW':
-            SSW_analysis(sfc_file)
+            result[item]=SSW_analysis(sfc_file)
         elif item =='jet':
             result[item+'_nh_pos'],result[item+'_nh_value'],result[item+'_sh_pos'],result[item+'_sh_value']=Jet_position_and_strength(sfc_file)
     return result
