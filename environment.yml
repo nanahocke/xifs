@@ -1,4 +1,4 @@
-name: py3_xifs
+name: xifs_env
 channels:
   - defaults
 dependencies:
@@ -48,4 +48,4 @@ dependencies:
   - zarr
 
   
-prefix: /home/nhocke/miniconda3/envs/py3_xifs
+prefix: /home/nhocke/miniconda3/envs/xifs_env
