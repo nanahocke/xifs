@@ -8,6 +8,6 @@ conda env create -n xifs_env -f xifs_environment.yml
 ```
 Install xifs
 ```
-source activate xifs_env
+conda activate xifs_env
 pip install git+https://github.com/nanahocke/xifs.git@master
 ```
