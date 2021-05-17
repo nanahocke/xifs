@@ -1,4 +1,4 @@
-name: py3_xifs
+name: xifs_env
 channels:
   - defaults
 dependencies:
