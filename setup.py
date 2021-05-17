@@ -8,4 +8,4 @@ setup(name='xifs',
       packages=['xifs'],
       package_dir={'xifs': 'xifs'},
       install_requires=['setuptools', ],
-      zip_safe=False
+      zip_safe=False)
