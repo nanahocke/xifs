@@ -108,6 +108,57 @@ def Jet_position_and_strength(sfc_file):
     jet_nh_val.attrs['long_name']='total wind'
     return jet_nh, jet_nh_val, jet_sh, jet_sh_val
 
+def mass_weighted_jet(sfc_file):
+    ds=xr.open_mfdataset(sfc_file, combine='by_coords')
+    u=ds['u']
+    v=ds['v']
+    uabs=np.sqrt(u**2+v**2)
+    pres=ds['pressure_levels']
+    lat=ds['lat']
+    pres_new=pres.where(pres<40000, drop=True).where(pres>10000, drop=True)
+    uabs=uabs.where(pres_new, drop=True).where(pres_new, drop=True)
+    m=pres_new/9.81
+    mwu=m*uabs
+    mwu_sum=mwu.sum(dim='pressure_levels')
+    ws=mwu_sum/m.sum()
+    ws.attrs=u.attrs
+    ws.attrs['standard_name']='mass_weighter_avg_u_abs'
+    ws.attrs['long_name']='mass weighted average wind speed'
+    
+    #mass flux weighted pressure
+    mwp=mwu*pres_new
+    P=mwp.sum(dim='pressure_levels')/mwu_sum
+    P.attrs=pres.attrs
+    P.attrs['name']='mass_flux_weighted_p'
+    P.attrs['long_name']='mass flux weighted pressure'
+    
+    #three jets
+    lat_nh=lat.where(lat<70, drop=True).where(lat>15, drop=True)
+    lat_sht=lat.where(lat>-40, drop=True).where(lat<-15, drop=True)
+    lat_shp=lat.where(lat>-70, drop=True).where(lat<-40, drop=True)
+
+    #mass flux weighted latitude
+    mwl=mwu_sum.where(lat_nh, drop=True)*lat_nh
+    mwl_sum=mwl.sum(dim='lat')
+    L_nh=mwl_sum/(mwu_sum.where(lat_nh, drop=True).sum(dim='lat'))
+    mwl=mwu_sum.where(lat_sht, drop=True)*lat_sht
+    mwl_sum=mwl.sum(dim='lat')
+    L_sht=mwl_sum/(mwu_sum.where(lat_sht, drop=True).sum(dim='lat'))
+    mwl=mwu_sum.where(lat_shp, drop=True)*lat_shp
+    mwl_sum=mwl.sum(dim='lat')
+    L_shp=mwl_sum/(mwu_sum.where(lat_shp, drop=True).sum(dim='lat'))
+    L_nh.attrs=lat.attrs
+    L_sht.attrs=lat.attrs
+    L_shp.attrs=lat.attrs
+    
+    ws.name='mw_avg_u_abs'#
+    P.name='mw_pres'
+    L_nh.name='mw_jet_nh'
+    L_sht.name='mw_jet_sht'
+    L_shp.name='mw_jet_shp'
+    
+    return ws , P , L_nh, L_sht, L_shp
+
 
 def SSW_analysis(sfc_file):
     """saves SSW central dates in a text file"""
@@ -147,6 +198,8 @@ def analysis(analysis_list, sfc_file):
             result[item]=SSW_analysis(sfc_file)
         elif item =='jet':
             result[item+'_nh_pos'],result[item+'_nh_value'],result[item+'_sh_pos'],result[item+'_sh_value']=Jet_position_and_strength(sfc_file)
+        elif item=='mw_jet':
+            result['mwu'], result['mwp'], result['mw_jet_nh'], result['mw_jet_sht'], result['mw_jet_shp']=mass_weighted_jet(sfc_file)
     return result
 
 def to_netcdf(d, path_name):
