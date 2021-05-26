@@ -3,6 +3,8 @@ import xarray as xr
 import warnings
 import numpy as np
 import math
+from datetime import datetime, timedelta
+import pandas as pd
 warnings.filterwarnings("ignore")
 
 def CRF_glomean(filename):
@@ -157,28 +159,63 @@ def mass_weighted_jet(sfc_file):
     L_sht.name='mw_jet_sht'
     L_shp.name='mw_jet_shp'
     
-    return ws , P , L_nh, L_sht, L_shp
+    ws_jet_nh=ws.sel(lat=L_nh, method='nearest')
+    ws_jet_sht=ws.sel(lat=L_sht, method='nearest')
+    ws_jet_shp=ws.sel(lat=L_shp, method='nearest')
+    
+    ws_jet_nh.name='nh_jet_u'
+    ws_jet_sht.name='sht_jet_u'
+    ws_jet_shp.name='shp_jet_u'
+    
+    return ws , P , L_nh, L_sht, L_shp, ws_jet_nh, ws_jet_sht, ws_jet_shp
 
 
 def SSW_analysis(sfc_file):
     """saves SSW central dates in a text file"""
     ds=xr.open_mfdataset(sfc_file, combine='by_coords')
     pv=polar_vortex(sfc_file)
-    seas = pv.sel(time_counter=pv.time_counter.dt.month.isin([1, 2, 3, 11, 12]))
-    SSW=seas.where(seas<=0)
+    seas = pv.where(pv.time_counter.dt.month.isin([1, 2, 3, 4, 11, 12])) #NDJFM and April
+    SSW=seas.where(seas<0)
     SSW_np=np.array(SSW)#
     date=np.array(SSW.time_counter)
     SSW_date=[]
+   
+    ###SSW events
+    for i in range(len(SSW_np)):
+        if not math.isnan(SSW_np[i]):
+            if math.isnan(SSW_np[i-1]) and not math.isnan(SSW_np[i+1]):
+                if SSW_date==[]:
+                    SSW_date.append(pd.to_datetime(date[i]))
+                elif pd.to_datetime(date[i])-timedelta(days=20)>pd.to_datetime(SSW_date[-1]):
+                    SSW_date.append(pd.to_datetime(date[i]))
+    
+    #turn westerly again
+    west=[]
     for i in range(len(SSW_np)):
         if math.isnan(SSW_np[i])==False:
-            if math.isnan(SSW_np[i-1]):
-                SSW_date.append(date[i])
-    SSW_date=xr.DataArray(SSW_date)
-    SSW_date.name='SSW_central_date'
-    SSW_date.attrs=ds['time_counter'].attrs
-    SSW_date=SSW_date.assign_coords({'dim_0':SSW_date})
-    SSW_date=SSW_date.rename({'dim_0':'time_counter'})
-    return SSW_date       
+            if math.isnan(SSW_np[i+1]):
+                west.append(pd.to_datetime(date[i+1]))
+
+                    
+    #find final warmings 
+    #when they didn't turn westerly again for 10 consecutive days before  April 30th after warming
+    SSW_date_new=[]
+    for i in range (len(SSW_date)):
+        for j in range(len(west)):
+            if west[j]>SSW_date[i] and west[j]-SSW_date[i] < timedelta(days=30):
+                
+                if SSW_date[i].month!=4:
+                    if SSW_date_new==[]:
+                        SSW_date_new.append(SSW_date[i])
+                    elif SSW_date_new[-1]!=SSW_date[i]:
+                        SSW_date_new.append(SSW_date[i])
+
+    SSW_date_new=xr.DataArray(SSW_date_new)
+    SSW_date_new.name='SSW_central_date'
+    SSW_date_new.attrs=ds['time_counter'].attrs
+    SSW_date_new=SSW_date_new.assign_coords({'dim_0':SSW_date_new})
+    SSW_date_new=SSW_date_new.rename({'dim_0':'time_counter'})
+    return SSW_date_new      
             
 def analysis(analysis_list, sfc_file):
 
@@ -199,7 +236,7 @@ def analysis(analysis_list, sfc_file):
         elif item =='jet':
             result[item+'_nh_pos'],result[item+'_nh_value'],result[item+'_sh_pos'],result[item+'_sh_value']=Jet_position_and_strength(sfc_file)
         elif item=='mw_jet':
-            result['mwu'], result['mwp'], result['mw_jet_nh'], result['mw_jet_sht'], result['mw_jet_shp']=mass_weighted_jet(sfc_file)
+            result['mwu'], result['mwp'], result['mw_jet_nh'], result['mw_jet_sht'], result['mw_jet_shp'], result['ws_jet_nh'], result['ws_jet_sht'], result['ws_jet_shp']=mass_weighted_jet(sfc_file)
     return result
 
 def to_netcdf(d, path_name):
