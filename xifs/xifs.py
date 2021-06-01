@@ -209,7 +209,7 @@ def SSW_analysis(sfc_file):
     SSW_date.attrs=ds['time_counter'].attrs
     SSW_date=SSW_date.assign_coords({'dim_0':SSW_date})
     SSW_date=SSW_date.rename({'dim_0':'time_counter'})
-    return SSW_date_new      
+    return SSW_date
             
 def analysis(analysis_list, sfc_file):
 
