@@ -172,23 +172,13 @@ def mass_weighted_jet(sfc_file):
 
 def SSW_analysis(sfc_file):
     """saves SSW central dates in a text file"""
-    ds=xr.open_mfdataset(sfc_file, combine='by_coords')
-    pv=polar_vortex(sfc_file)
+    ds=xr.open_mfdataset(new_file, combine='by_coords')
+    pv=xifs.polar_vortex(new_file)
     seas = pv.where(pv.time_counter.dt.month.isin([1, 2, 3, 4, 11, 12])) #NDJFM and April
     SSW=seas.where(seas<0)
     SSW_np=np.array(SSW)#
     date=np.array(SSW.time_counter)
-    SSW_date=[]
-   
-    ###SSW events
-    for i in range(len(SSW_np)):
-        if not math.isnan(SSW_np[i]):
-            if math.isnan(SSW_np[i-1]) and not math.isnan(SSW_np[i+1]):
-                if SSW_date==[]:
-                    SSW_date.append(pd.to_datetime(date[i]))
-                elif pd.to_datetime(date[i])-timedelta(days=20)>pd.to_datetime(SSW_date[-1]):
-                    SSW_date.append(pd.to_datetime(date[i]))
-    
+
     #turn westerly again
     west=[]
     for i in range(len(SSW_np)):
@@ -196,25 +186,29 @@ def SSW_analysis(sfc_file):
             if math.isnan(SSW_np[i+1]):
                 west.append(pd.to_datetime(date[i+1]))
 
-                    
-    #find final warmings 
-    #when they didn't turn westerly again for 10 consecutive days before  April 30th after warming
-    SSW_date_new=[]
-    for i in range (len(SSW_date)):
-        for j in range(len(west)):
-            if west[j]>SSW_date[i] and west[j]-SSW_date[i] < timedelta(days=30):
-                
-                if SSW_date[i].month!=4:
-                    if SSW_date_new==[]:
-                        SSW_date_new.append(SSW_date[i])
-                    elif SSW_date_new[-1]!=SSW_date[i]:
-                        SSW_date_new.append(SSW_date[i])
+    ###SSW events
+    SSW_date=[]
+    for i in range(len(SSW_np)):
+        if i!=0 and i!=len(SSW_np)-1 and not math.isnan(SSW_np[i]) and math.isnan(SSW_np[i-1]) and not math.isnan(SSW_np[i+1]):
+            if SSW_date==[]:
+                for j in range(len(west)):
+                    if west[j]>pd.to_datetime(date[i]) and west[j]-pd.to_datetime(date[i]) < timedelta(days=30) and pd.to_datetime(date[i]).month!=4:
+                        if SSW_date==[]:
+                            SSW_date.append(pd.to_datetime(date[i]))
+                        elif SSW_date[-1]!=pd.to_datetime(date[i]):
+                            SSW_date.append(pd.to_datetime(date[i]))
 
-    SSW_date_new=xr.DataArray(SSW_date_new)
-    SSW_date_new.name='SSW_central_date'
-    SSW_date_new.attrs=ds['time_counter'].attrs
-    SSW_date_new=SSW_date_new.assign_coords({'dim_0':SSW_date_new})
-    SSW_date_new=SSW_date_new.rename({'dim_0':'time_counter'})
+
+            elif pd.to_datetime(date[i])-timedelta(days=20)>pd.to_datetime(SSW_date[-1]) and np.isnan(SSW_np[i-11:i]).all(): #no new SSW date during 20 days after SSW date
+                for j in range(len(west)):
+                    if west[j]>pd.to_datetime(date[i]) and west[j]-pd.to_datetime(date[i]) < timedelta(days=30) and pd.to_datetime(date[i]).month!=4 and SSW_date[-1]!=pd.to_datetime(date[i]):
+                        SSW_date.append(pd.to_datetime(date[i]))
+
+    SSW_date=xr.DataArray(SSW_date)
+    SSW_date.name='SSW_central_date'
+    SSW_date.attrs=ds['time_counter'].attrs
+    SSW_date=SSW_date.assign_coords({'dim_0':SSW_date})
+    SSW_date=SSW_date.rename({'dim_0':'time_counter'})
     return SSW_date_new      
             
 def analysis(analysis_list, sfc_file):
