@@ -173,7 +173,7 @@ def mass_weighted_jet(sfc_file):
 def SSW_analysis(sfc_file):
     """saves SSW central dates in a text file"""
     ds=xr.open_mfdataset(sfc_file, combine='by_coords')
-    pv=xifs.polar_vortex(fc_file)
+    pv=polar_vortex(fc_file)
     seas = pv.where(pv.time_counter.dt.month.isin([1, 2, 3, 4, 11, 12])) #NDJFM and April
     SSW=seas.where(seas<0)
     SSW_np=np.array(SSW)#
