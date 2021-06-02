@@ -11,7 +11,7 @@ import xifs.xifs as xifs
 To run an analysis, we need the path to a netCDF file and a list of keywords that need to be calculated. The output will be a dictionary which can be saved as a netCDF file by using the to_netcdf function:
 
 ```python
-list = ['kw1','kw2',kw3']
+list = ['kw1','kw2','kw3']
 result = xifs.analysis(list, 'path/to/input/netcdf/file.nc')
 xifs.to_netcdf(result, 'path/to/where/you/want/your/file/to/be/saved.nc')
 
