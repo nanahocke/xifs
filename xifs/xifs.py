@@ -8,7 +8,7 @@ import pandas as pd
 warnings.filterwarnings("ignore")
 
 def CRF_glomean(filename):
-    """calculates CRF on lat/lon grid, plots global mean in a time series"""
+    """calculates CRF on lat/lon grid"""
 
     ds=xr.open_mfdataset(filename, combine='by_coords')
     weights=np.cos(np.deg2rad(ds.lat))
@@ -31,7 +31,7 @@ def CRF_glomean(filename):
     return CRF_global_mean
 
 def output_variable_glomean(filename, var):
-    """input: netcdf data, variable; plots global mean in a time series"""
+    """input: netcdf data, variable"""
     ds=xr.open_mfdataset(filename, combine='by_coords')
     
     variable=ds[var]
@@ -45,7 +45,7 @@ def output_variable_glomean(filename, var):
     return var_global_mean
     
 def output_variable_seasonal_map(filename, var):
-    """input: netcdf data, variable, season; plots seasonal average of variable as Mollweide projection"""
+    """input: netcdf data, variable, season"""
     ds=xr.open_mfdataset(filename, combine='by_coords')
     variable=ds[var]
     month_length=variable.time_counter.dt.days_in_month
