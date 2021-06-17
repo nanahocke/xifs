@@ -22,6 +22,8 @@ Global means are weighted by latitude. Keywords for global means must be 'glomea
 ### seasonal means
 Seasonal means are weighted by the length of the months. Keywords for seasonal means must be 'seasmean_'+ variable name of your input data, e.g. 'seasmean_2t'.
 The output unit is the same as the input.
+### seasonal total wind
+The seasonal mean total wind can be selected with 'seasmean_totalwind'. The unit is given in m/s.
 ### global CRF
 The global mean Cloud Radiative Force (CRF) can be selected with 'glomean_crf'. The unit is given in J/m².
 ### Stratospheric and Tropospheric jet properties
