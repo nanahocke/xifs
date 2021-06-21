@@ -218,7 +218,7 @@ def analysis(analysis_list, sfc_file):
         if item == 'glomean_crf':
             result['glomean_crf'] = CRF_glomean(sfc_file)
         elif item=='seasmean_totalwind':
-            result[item]=np.sqrt(output_variable_seasonal_map(sfc_file, 'u')**2+output_variable_seasonal_map(sfc_file, 'v')**2)
+            result[item]=np.sqrt(output_variable_seasonal_map(sfc_file, '10u')**2+output_variable_seasonal_map(sfc_file, '10v')**2)
         elif item[:8]=='seasmean':
             result[item] = output_variable_seasonal_map(sfc_file, item[9:])
         elif item[:7]=='glomean':
