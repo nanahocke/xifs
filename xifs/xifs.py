@@ -19,44 +19,61 @@ def CRF_glomean(filename):
     ttr=ds.ttr
     tsr=ds.tsr
 
-	###Calculation of CRF
+    ###Calculation of CRF
     CRF_LW=ttrc-ttr
     CRF_SW=tsrc-tsr
     CRF=CRF_SW+CRF_LW
     CRF_weighted=CRF.weighted(weights)
     CRF_global_mean=CRF_weighted.mean(('lat', 'lon'))
     CRF_global_mean.attrs={'long_name': 'CRF',
-                          'units': 'J/m²'}
+                          'units': 'J m-2'}
     CRF_global_mean.name='glomean_crf'
     return CRF_global_mean
 
 def output_variable_glomean(filename, var):
     """input: netcdf data, variable"""
     ds=xr.open_mfdataset(filename, combine='by_coords')
-    
-    variable=ds[var]
-    weights=np.cos(np.deg2rad(ds.lat))
-    var_weighted=variable.weighted(weights)
-    
-    var_global_mean=var_weighted.mean(('lat', 'lon'))
-    var_global_mean.attrs=variable.attrs
-    var_global_mean.name='glomean_'+var
-    
-    return var_global_mean
+    if var=='totalwind':
+        uwind=output_variable_glomean(filename, '10u')
+        vwind=output_variable_glomean(filename, '10v')
+        wind=np.sqrt(uwind**2+vwind**2)
+        wind.attrs=uwind.attrs
+        wind.name='glomean_totalwind'
+        wind.attrs['long_name']='glomean_totalwind'
+        return wind
+    else:
+        variable=ds[var]
+        weights=np.cos(np.deg2rad(ds.lat))
+        var_weighted=variable.weighted(weights)
+
+        var_global_mean=var_weighted.mean(('lat', 'lon'))
+        var_global_mean.attrs=variable.attrs
+        var_global_mean.name='glomean_'+var
+
+        return var_global_mean
     
 def output_variable_seasonal_map(filename, var):
-    """input: netcdf data, variable, season"""
+    """input: netcdf data, variable"""
     ds=xr.open_mfdataset(filename, combine='by_coords')
-    variable=ds[var]
-    month_length=variable.time_counter.dt.days_in_month
-    weights = month_length.groupby('time_counter.season') / month_length.groupby('time_counter.season').sum()
-    np.testing.assert_allclose(weights.groupby('time_counter.season').sum().values, np.ones(4))
-    ds_weighted = (variable * weights).groupby('time_counter.season').sum(dim='time_counter')
-    
-    var_season=ds_weighted
-    var_season.attrs=variable.attrs
-    var_season.name='seasmean_'+var
-    return var_season
+    if var=='totalwind':
+        uwind=output_variable_seasonal_map(filename, '10u')
+        vwind=output_variable_seasonal_map(filename, '10v')
+        wind= np.sqrt(uwind**2+vwind**2)
+        wind.attrs=uwind.attrs
+        wind.name='glomean_totalwind'
+        wind.attrs['long_name']='glomean_totalwind'
+        return wind
+    else:
+        variable=ds[var]
+        month_length=variable.time_counter.dt.days_in_month
+        weights = month_length.groupby('time_counter.season') / month_length.groupby('time_counter.season').sum()
+        np.testing.assert_allclose(weights.groupby('time_counter.season').sum().values, np.ones(4))
+        ds_weighted = (variable * weights).groupby('time_counter.season').sum(dim='time_counter')
+
+        var_season=ds_weighted
+        var_season.attrs=variable.attrs
+        var_season.name='seasmean_'+var
+        return var_season
 
 def polar_vortex(filename):
     ds=xr.open_mfdataset(filename, combine='by_coords')
@@ -217,8 +234,6 @@ def analysis(analysis_list, sfc_file):
     for item in analysis_list:
         if item == 'glomean_crf':
             result['glomean_crf'] = CRF_glomean(sfc_file)
-        elif item=='seasmean_totalwind':
-            result[item]=np.sqrt(output_variable_seasonal_map(sfc_file, '10u')**2+output_variable_seasonal_map(sfc_file, '10v')**2)
         elif item[:8]=='seasmean':
             result[item] = output_variable_seasonal_map(sfc_file, item[9:])
         elif item[:7]=='glomean':
