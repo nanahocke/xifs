@@ -29,7 +29,7 @@ def analysis(analysis_list: list, sfc_file: str):
     ###inner functions
     
     def CRF_glomean(filename: str):
-    """calculates global mean CRF of input data in netCDF format. Input data must contain TOA thermal and short wave radiaton and TOA thermal and short wave radiation clear sky parameters.
+        """calculates global mean CRF of input data in netCDF format. Input data must contain TOA thermal and short wave radiaton and TOA thermal and short wave radiation clear sky parameters.
         input:
         filename: (path to) xifs netCDF file"""
         ds=xr.open_mfdataset(filename, combine='by_coords')
