@@ -51,6 +51,30 @@ def analysis(analysis_list: list, sfc_file: str):
                               'units': 'J m-2'}
         CRF_global_mean.name='glomean_crf'
         return CRF_global_mean
+    def output_zonalmean(filename: str, var: str):
+                """calculates zonal mean of T or total wind over different pressure levels in seasonal means
+        input:
+        var: variable name e.g. 't' 
+        filename:(path to) ERA5 dataset in netCDF format or a list of (paths to) files with 'CF-1.6' format"""
+        ds=xr.open_mfdataset(filename, combine='by_coords')
+        if var == 't':
+            t=ds[var]
+            t_mean=t.mean('longitude')
+            month_length=t_mean.time_counter.dt.days_in_month
+            weights = month_length.groupby('time_counter.season') / month_length.groupby('time_counter.season').sum()
+            np.testing.assert_allclose(weights.groupby('time_counter.season').sum().values, np.ones(4))
+            ds_weighted = (t_mean * weights).groupby('time_counter.season').sum(dim='time_counter')
+            return ds_weighted
+        elif var == 'wind':
+            u=ds['u']
+            v=ds['v']
+            wind=np.sqrt(u**2+v**2)
+            wind_mean=wind.mean('longitude')
+            month_length=wind_mean.time_counter.dt.days_in_month
+            weights = month_length.groupby('time_counter.season') / month_length.groupby('time_counter.season').sum()
+            np.testing.assert_allclose(weights.groupby('time_counter.season').sum().values, np.ones(4))
+            ds_weighted = (wind_mean * weights).groupby('time_counter.season').sum(dim='time_counter')
+            return ds_weighted
 
     def output_variable_glomean(filename: str, var: str):
         """calculates global means of input data in netCDF format
@@ -67,6 +91,23 @@ def analysis(analysis_list: list, sfc_file: str):
             wind.name='glomean_totalwind'
             wind.attrs['long_name']='glomean_totalwind'
             return wind
+        elif var == 'toa_fluxes':
+            tsr=output_variable_glomean(filename, 'tsr')
+            ttr=output_variable_glomean(filename, 'ttr')
+            toa_flux=tsr+ttr
+            toa_flux.attrs=tsr.attrs
+            toa_flux.name='TOA flux'
+            toa_flux.attrs['long_name']='TOA flux'
+            return toa_flux
+        elif var == 'surface_heat_fluxes':
+            slhf=output_variable_glomean(filename, 'slhf')
+            sshf=output_variable_glomean(filename, 'sshf')
+            ssr=output_variable_glomean(filename, 'ssr')
+            str_=output_variable_glomean(filename, 'str')
+            sh_flux=slhf+sshf+ssr+str_
+            sh_flux.attrs=slhf.attrs
+            sh_flux.name='surface heat flux'
+            sh_flux.attrs['long_name']='surface heat flux'
         else:
             #latitudinal weight
             variable=ds[var]
@@ -304,6 +345,10 @@ def analysis(analysis_list: list, sfc_file: str):
     for item in analysis_list:
         if item == 'glomean_crf':
             result['glomean_crf'] = CRF_glomean(sfc_file)
+        elif item[:9] =='zonalmean':
+            result[item]=output_zonalmean(sfc_file, item[10:])
+        elif item=='seasmean_totalwind':
+            result['glomean_crf']=np.sqrt(output_variable_seasonal_map(input_comp, '10u')**2+output_variable_seasonal_map(input_comp, '10v')**2)
         elif item[:8]=='seasmean':
             result[item] = output_variable_seasonal_map(sfc_file, item[9:])
         elif item[:7]=='glomean':
