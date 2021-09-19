@@ -52,7 +52,7 @@ def analysis(analysis_list: list, sfc_file: str):
         CRF_global_mean.name='glomean_crf'
         return CRF_global_mean
     def output_zonalmean(filename: str, var: str):
-                """calculates zonal mean of T or total wind over different pressure levels in seasonal means
+        """calculates zonal mean of T or total wind over different pressure levels in seasonal means
         input:
         var: variable name e.g. 't' 
         filename:(path to) ERA5 dataset in netCDF format or a list of (paths to) files with 'CF-1.6' format"""
