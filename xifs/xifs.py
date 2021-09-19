@@ -108,6 +108,7 @@ def analysis(analysis_list: list, sfc_file: str):
             sh_flux.attrs=slhf.attrs
             sh_flux.name='surface heat flux'
             sh_flux.attrs['long_name']='surface heat flux'
+            return sh_flux
         else:
             #latitudinal weight
             variable=ds[var]
