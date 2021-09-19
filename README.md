@@ -19,6 +19,14 @@ xifs.to_netcdf(result, 'path/to/where/you/want/your/file/to/be/saved.nc')
 ## What does xifs.analysis calculate?
 ### global means
 Global means are weighted by latitude. Keywords for global means must be 'glomean_'+ variable name of your input data, e.g. 'glomean_2t'. The output unit is the same as the input.
+### global mean TOA heat fluxes
+Keyword: 'glomean_toa_fluxes', returns global mean of tsr-ttr (top solar radiation and top thermal radiation)
+TOA and surface heat flux balances are calculated as following:
+![heat fluxes](heatfluxes.jpg)
+### global mean surface heat fluxes
+Keyword: 'glomean_surface_heat_fluxes', returns global mean of slhf+sshf+ssr+str (surface latent heat flux + surface sensible heat flux + surface solar radiation + surface thermal radiation)
+### global mean total wind
+Keyword: 'glomean_totalwind', returns global mean of sqrt(u²+v²)
 ### seasonal means
 Seasonal means are weighted by the length of the months. Keywords for seasonal means must be 'seasmean_'+ variable name of your input data, e.g. 'seasmean_2t'.
 The output unit is the same as the input.
@@ -46,6 +54,10 @@ For tropospheric jet calculation we have two options:
   * 'ws_jet_sht' is the mass weighted wind speed of the southern hemispheric subtropical jet and is 3-dimensional (wind speed, longitude, time)
   * 'ws_jet_shp' is the mass weighted wind speed of the southern hemispheric polar jet and is 3-dimensional (wind speed, longitude, time)
  All mass weighted calculations were done analogous to Archer, Caldeira (2008).
+ 
+### zonal means
+* 'zonalmean_t' calculates the zonal mean temperature
+* 'zonalmean_wind' calculates the zonal mean 2D-wind (sqrt(u²+v²))
 
 ## Installation
 install dependencies
