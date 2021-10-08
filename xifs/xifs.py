@@ -6,33 +6,27 @@ xifs.analysis(analysis_list: list, sfc_file: str)
 xifs.to_netcdf(d: dict, path_name: str)
 """
 
-
 import numpy as np
-import xarray as xr
-import warnings
-import numpy as np
-import math
-from datetime import datetime, timedelta
 import pandas as pd
+import xarray as xr
+import math
+from datetime import timedelta
+import warnings
 warnings.filterwarnings("ignore")
 
 
 
-
-#####for user######
-            
-def analysis(analysis_list: list, sfc_file: str):
+def analysis(analysis_list: list, sfc_file):
     """input:
     analysis_list: list of variables to be analysed, e.g. ['glomean_crf', 'seasmean_2t']
     sfc_file: (path to) netCDF file in CF-1.6 format"""
-    
     ###inner functions
     
-    def CRF_glomean(filename: str):
+    def CRF_glomean(file):
         """calculates global mean CRF of input data in netCDF format. Input data must contain TOA thermal and short wave radiaton and TOA thermal and short wave radiation clear sky parameters.
         input:
         filename: (path to) xifs netCDF file"""
-        ds=xr.open_mfdataset(filename, combine='by_coords')
+        ds=file
         weights=np.cos(np.deg2rad(ds.lat))
 
         ###variables
@@ -51,12 +45,12 @@ def analysis(analysis_list: list, sfc_file: str):
                               'units': 'J m-2'}
         CRF_global_mean.name='glomean_crf'
         return CRF_global_mean
-    def output_zonalmean(filename: str, var: str):
+    def output_zonalmean(file, var: str):
         """calculates zonal mean of T or total wind over different pressure levels in seasonal means
         input:
         var: variable name e.g. 't' 
         filename:(path to) ERA5 dataset in netCDF format or a list of (paths to) files with 'CF-1.6' format"""
-        ds=xr.open_mfdataset(filename, combine='by_coords')
+        ds=file
         if var == 't':
             t=ds[var]
             t_mean=t.mean('longitude')
@@ -76,34 +70,34 @@ def analysis(analysis_list: list, sfc_file: str):
             ds_weighted = (wind_mean * weights).groupby('time_counter.season').sum(dim='time_counter')
             return ds_weighted
 
-    def output_variable_glomean(filename: str, var: str):
+    def output_variable_glomean(file, var: str):
         """calculates global means of input data in netCDF format
         input:
         var: variable name e.g. '2t'
         filename: (path to) xifs dataset in netCDF format or a list of (paths to) xifs netCDF files"""
-        ds=xr.open_mfdataset(filename, combine='by_coords')
+        ds=file
         #total wind calculations with sqrt(u²+v²)
         if var=='totalwind':
-            uwind=output_variable_glomean(filename, '10u')
-            vwind=output_variable_glomean(filename, '10v')
+            uwind=output_variable_glomean(ds, '10u')
+            vwind=output_variable_glomean(ds, '10v')
             wind=np.sqrt(uwind**2+vwind**2)
             wind.attrs=uwind.attrs
             wind.name='glomean_totalwind'
             wind.attrs['long_name']='glomean_totalwind'
             return wind
         elif var == 'toa_fluxes':
-            tsr=output_variable_glomean(filename, 'tsr')
-            ttr=output_variable_glomean(filename, 'ttr')
+            tsr=output_variable_glomean(ds, 'tsr')
+            ttr=output_variable_glomean(ds, 'ttr')
             toa_flux=tsr+ttr
             toa_flux.attrs=tsr.attrs
             toa_flux.name='TOA flux'
             toa_flux.attrs['long_name']='TOA flux'
             return toa_flux
         elif var == 'surface_heat_fluxes':
-            slhf=output_variable_glomean(filename, 'slhf')
-            sshf=output_variable_glomean(filename, 'sshf')
-            ssr=output_variable_glomean(filename, 'ssr')
-            str_=output_variable_glomean(filename, 'str')
+            slhf=output_variable_glomean(ds, 'slhf')
+            sshf=output_variable_glomean(ds, 'sshf')
+            ssr=output_variable_glomean(ds, 'ssr')
+            str_=output_variable_glomean(ds, 'str')
             sh_flux=slhf+sshf+ssr+str_
             sh_flux.attrs=slhf.attrs
             sh_flux.name='surface heat flux'
@@ -121,20 +115,20 @@ def analysis(analysis_list: list, sfc_file: str):
 
             return var_global_mean
 
-    def output_variable_seasonal_map(filename: str, var: str):
+    def output_variable_seasonal_map(file, var: str):
         """calculates seasonal means of input data in netCDF format
         input:
         var: variable name e.g. '2t'
         filename: (path to) xifs dataset in netCDF format or a list of (paths to) files"""
-        ds=xr.open_mfdataset(filename, combine='by_coords')
+        ds=file
         #total wind calculations with sqrt(u²+v²)
         if var=='totalwind':
-            uwind=output_variable_seasonal_map(filename, '10u')
-            vwind=output_variable_seasonal_map(filename, '10v')
+            uwind=output_variable_seasonal_map(ds, '10u')
+            vwind=output_variable_seasonal_map(ds, '10v')
             wind= np.sqrt(uwind**2+vwind**2)
             wind.attrs=uwind.attrs
-            wind.name='glomean_totalwind'
-            wind.attrs['long_name']='glomean_totalwind'
+            wind.name='seasmean_totalwind'
+            wind.attrs['long_name']='seasmean_totalwind'
             return wind
         else:
             variable=ds[var]
@@ -148,12 +142,12 @@ def analysis(analysis_list: list, sfc_file: str):
             var_season.name='seasmean_'+var
             return var_season
 
-    def polar_vortex(filename: str):
+    def polar_vortex(file):
         """calculates the strength of the polar vortex. The output is the zonal wind at 60°N and 10hPa over time
         input:
         filename: (path to) xifs dataset in netCDF format or a list of (paths to) files"""
         # u wind at 60°N and 10 hPa
-        ds=xr.open_mfdataset(filename, combine='by_coords')
+        ds=file
         u=ds['u']
         lat=u.lat
         u_mean=u.sel(lat=60, pressure_levels=1000,method='nearest').mean('lon')
@@ -162,12 +156,12 @@ def analysis(analysis_list: list, sfc_file: str):
         u_mean.name='u_polar_vortex'
         return u_mean
 
-    def QBO(filename: str):
+    def QBO(file):
         """calculates the Quasi Biennial Oscillation Index by selecting the grid point closest to Singapore (lat=1.29,lon=103.85), and returning monthly means. The output array is 3-dimensional (u (unit=m/s), pressure_level, time).
         input:
         filename: (path to) xifs dataset in netCDF format or a list of (paths to) files"""
         #u closest to Singapore
-        ds=xr.open_mfdataset(filename, combine='by_coords')
+        ds=file
         u=ds['u']
         lat=u.lat
         lon=u.lon
@@ -177,13 +171,13 @@ def analysis(analysis_list: list, sfc_file: str):
         u_mean.name='u_Singapore'
         return u_mean
 
-    def Jet_position_and_strength(sfc_file: str):
+    def Jet_position_and_strength(file):
         """returns four variables: 'jet_nh_pos', 'jet_sh_value', 'jet_sh_pos', 'jet_sh_value'. All arrays are 3-dimenional (lat/u, time, longitude). It basically returns the position and strength of the northern and southern hemispheric tropospheric jet by finding the total wind maximum at 300hPa at 40-90°N / 40-90°S
         input:
         sfc_file:(path to) xifs dataset in netCDF format or a list of (paths to) files
         """
         #Jet after wind maximum
-        ds=xr.open_mfdataset(sfc_file, combine='by_coords')
+        ds=file
         u_wind=ds['u']
         v=ds['v']
         u=np.sqrt(u_wind**2+v**2)
@@ -213,7 +207,7 @@ def analysis(analysis_list: list, sfc_file: str):
         jet_nh_val.attrs['long_name']='total wind'
         return jet_nh, jet_nh_val, jet_sh, jet_sh_val
 
-    def mass_weighted_jet(sfc_file: str):
+    def mass_weighted_jet(file):
         """
         returns eight variables:
         'mwu' is a 4-dimensional output array (mass weighted average wind speed, latitude, longitude, time).
@@ -230,7 +224,7 @@ def analysis(analysis_list: list, sfc_file: str):
 
         """
         #mass weighted jet
-        ds=xr.open_mfdataset(sfc_file, combine='by_coords')
+        ds=file
         u=ds['u']
         v=ds['v']
         uabs=np.sqrt(u**2+v**2)
@@ -289,7 +283,7 @@ def analysis(analysis_list: list, sfc_file: str):
         return ws , P , L_nh, L_sht, L_shp, ws_jet_nh, ws_jet_sht, ws_jet_shp
 
 
-    def SSW_analysis(sfc_file: str):
+    def SSW_analysis(file):
         """
         returns a 1D-array with all SSW events found in the input Dataset. SSW central dates are defined as zonal mean zonal wind reversal (westerly to easerly) at 10hPa and 60°N. For this analysis, an extended winter season NDJFM was selected. To find the SSW events, three conditions were used.
 
@@ -300,8 +294,8 @@ def analysis(analysis_list: list, sfc_file: str):
         input:
         sfc_file:(path to) xifs dataset in netCDF format or a list of (paths to) files
         """
-        ds=xr.open_mfdataset(sfc_file, combine='by_coords')
-        pv=polar_vortex(sfc_file)
+        ds=file
+        pv=polar_vortex(ds)
         seas = pv.where(pv.time_counter.dt.month.isin([1, 2, 3, 4, 11, 12])) #NDJFM and April
         SSW=seas.where(seas<0)
         SSW_np=np.array(SSW)#
@@ -345,11 +339,9 @@ def analysis(analysis_list: list, sfc_file: str):
     result = {} # empty dictionary
     for item in analysis_list:
         if item == 'glomean_crf':
-            result['glomean_crf'] = CRF_glomean(sfc_file)
+            result[item] = CRF_glomean(sfc_file)
         elif item[:9] =='zonalmean':
             result[item]=output_zonalmean(sfc_file, item[10:])
-        elif item=='seasmean_totalwind':
-            result['glomean_crf']=np.sqrt(output_variable_seasonal_map(input_comp, '10u')**2+output_variable_seasonal_map(input_comp, '10v')**2)
         elif item[:8]=='seasmean':
             result[item] = output_variable_seasonal_map(sfc_file, item[9:])
         elif item[:7]=='glomean':
@@ -365,9 +357,3 @@ def analysis(analysis_list: list, sfc_file: str):
         elif item=='mw_jet':
             result['mwu'], result['mwp'], result['mw_jet_nh'], result['mw_jet_sht'], result['mw_jet_shp'], result['ws_jet_nh'], result['ws_jet_sht'], result['ws_jet_shp']=mass_weighted_jet(sfc_file)
     return result
-
-def to_netcdf(d: dict, path_name: str):
-    """d is a dictionary, path_name is a string, writes d on disk as netCDF"""
-    data=d.values()
-    ds=xr.merge(data, compat='override')
-    ds.to_netcdf(path=path_name)
