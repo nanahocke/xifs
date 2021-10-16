@@ -357,3 +357,8 @@ def analysis(analysis_list: list, sfc_file):
         elif item=='mw_jet':
             result['mwu'], result['mwp'], result['mw_jet_nh'], result['mw_jet_sht'], result['mw_jet_shp'], result['ws_jet_nh'], result['ws_jet_sht'], result['ws_jet_shp']=mass_weighted_jet(sfc_file)
     return result
+
+def to_netcdf(d: dict, path_name: str):
+    """d is a dictionary, path_name is a string, writes d on disk as netCDF"""
+    data=d.values()
+    ds=xr.merge(data, compat='override')
