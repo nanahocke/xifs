@@ -49,7 +49,7 @@ def analysis(analysis_list: list, sfc_file):
         """calculates zonal mean of T or total wind over different pressure levels in seasonal means
         input:
         var: variable name e.g. 't' 
-        filename:(path to) ERA5 dataset in netCDF format or a list of (paths to) files with 'CF-1.6' format"""
+        file:xr Dataset"""
         ds=file
         if var == 't':
             t=ds[var]
@@ -74,7 +74,7 @@ def analysis(analysis_list: list, sfc_file):
         """calculates global means of input data in netCDF format
         input:
         var: variable name e.g. '2t'
-        filename: (path to) xifs dataset in netCDF format or a list of (paths to) xifs netCDF files"""
+        file: xr Dataset"""
         ds=file
         #total wind calculations with sqrt(u²+v²)
         if var=='totalwind':
@@ -119,7 +119,7 @@ def analysis(analysis_list: list, sfc_file):
         """calculates seasonal means of input data in netCDF format
         input:
         var: variable name e.g. '2t'
-        filename: (path to) xifs dataset in netCDF format or a list of (paths to) files"""
+        file: xr Dataset"""
         ds=file
         #total wind calculations with sqrt(u²+v²)
         if var=='totalwind':
@@ -145,7 +145,7 @@ def analysis(analysis_list: list, sfc_file):
     def polar_vortex(file):
         """calculates the strength of the polar vortex. The output is the zonal wind at 60°N and 10hPa over time
         input:
-        filename: (path to) xifs dataset in netCDF format or a list of (paths to) files"""
+        file: xr Dataset"""
         # u wind at 60°N and 10 hPa
         ds=file
         u=ds['u']
@@ -159,7 +159,7 @@ def analysis(analysis_list: list, sfc_file):
     def QBO(file):
         """calculates the Quasi Biennial Oscillation Index by selecting the grid point closest to Singapore (lat=1.29,lon=103.85), and returning monthly means. The output array is 3-dimensional (u (unit=m/s), pressure_level, time).
         input:
-        filename: (path to) xifs dataset in netCDF format or a list of (paths to) files"""
+        file: xr Dataset"""
         #u closest to Singapore
         ds=file
         u=ds['u']
@@ -174,7 +174,7 @@ def analysis(analysis_list: list, sfc_file):
     def Jet_position_and_strength(file):
         """returns four variables: 'jet_nh_pos', 'jet_sh_value', 'jet_sh_pos', 'jet_sh_value'. All arrays are 3-dimenional (lat/u, time, longitude). It basically returns the position and strength of the northern and southern hemispheric tropospheric jet by finding the total wind maximum at 300hPa at 40-90°N / 40-90°S
         input:
-        sfc_file:(path to) xifs dataset in netCDF format or a list of (paths to) files
+        file: xr Dataset
         """
         #Jet after wind maximum
         ds=file
@@ -220,7 +220,7 @@ def analysis(analysis_list: list, sfc_file):
         'ws_jet_shp' is the mass weighted wind speed of the southern hemispheric polar jet and is 3-dimensional (wind speed, longitude, time) All mass weighted calculations were done analogous to Archer, Caldeira (2008).
 
         input:
-        sfc_file:(path to) xifs dataset in netCDF format or a list of (paths to) files
+        file:xr Dataset
 
         """
         #mass weighted jet
@@ -292,7 +292,7 @@ def analysis(analysis_list: list, sfc_file):
         Before a SSW event, there need to be (at least) 10 consecutive days of westerlies.
 
         input:
-        sfc_file:(path to) xifs dataset in netCDF format or a list of (paths to) files
+        file:xr Dataset
         """
         ds=file
         pv=polar_vortex(ds)
