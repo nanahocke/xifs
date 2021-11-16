@@ -57,7 +57,7 @@ For tropospheric jet calculation we have two options:
  
 ### zonal means
 * 'zonalmean_t' calculates the zonal mean temperature
-* 'zonalmean_wind' calculates the zonal mean 2D-wind (sqrt(u²+v²))
+* 'zonalmean_wind' calculates the zonal mean zonao wind u
 
 ## Installation
 install dependencies

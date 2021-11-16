@@ -61,9 +61,7 @@ def analysis(analysis_list: list, sfc_file):
             return ds_weighted
         elif var == 'wind':
             u=ds['u']
-            v=ds['v']
-            wind=np.sqrt(u**2+v**2)
-            wind_mean=wind.mean('longitude')
+            wind_mean=u.mean('longitude')
             month_length=wind_mean.time_counter.dt.days_in_month
             weights = month_length.groupby('time_counter.season') / month_length.groupby('time_counter.season').sum()
             np.testing.assert_allclose(weights.groupby('time_counter.season').sum().values, np.ones(4))
